@@ -1,0 +1,13 @@
+#
+# Секретная разработка штаба Навального по перевороту румайна
+
+Settings:
+  supervisorHost: localhost:7000
+  nettyThreadsCount: 0 # При установке значения 0, количество потоков будет определяться автоатически
+  enableDebug: true
+
+# Разрешенные IP-адреса для устновки соединения
+Security:
+  enable: false
+  allowedIPs:
+    - 127.0.0.1

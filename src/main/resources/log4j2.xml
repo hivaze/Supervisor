@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties> <Property name="baseDir">Supervisor/logs</Property> </Properties>
+    <Appenders>
+        <Console name="Console"> <PatternLayout pattern="\r[%d{HH:mm:ss}] [%level] %msg%n> "/> </Console>
+        <RollingFile name="File" filePattern="${baseDir}/launch %d{yyyy-MM-dd HH:mm:ss}{GMT+3}.log">
+            <PatternLayout pattern="[%d{HH:mm:ss}] [%level] %msg%n" />
+            <Policies> <OnStartupTriggeringPolicy /> </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>
