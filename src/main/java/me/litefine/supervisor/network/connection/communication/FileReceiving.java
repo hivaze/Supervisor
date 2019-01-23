@@ -1,4 +1,4 @@
-package me.litefine.supervisor.network.files;
+package me.litefine.supervisor.network.connection.communication;
 
 import me.litefine.supervisor.network.messages.files.FileSendingMessage;
 

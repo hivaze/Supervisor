@@ -47,10 +47,10 @@ public class NettyServer {
                 channel.pipeline().addLast(new ReadTimeoutHandler(3000));
                 channel.pipeline().addLast(new ChunkedWriteHandler());
                 channel.pipeline().addLast(ChunkedFileDecoder.INSTANCE);
-                channel.pipeline().addLast(new FramedMessageDecoder());
+                channel.pipeline().addLast(FramedMessageDecoder.INSTANCE);
                 channel.pipeline().addLast(MessageEncoder.INSTANCE);
                 channel.pipeline().addLast(ChunkedFileEncoder.INSTANCE);
-                channel.pipeline().addLast(new LogicHandler());
+                channel.pipeline().addLast(LogicHandler.INSTANCE);
             }
         };
         new ServerBootstrap().group(bossGroup, workerGroup)

@@ -42,7 +42,7 @@ public abstract class ServerRepresenter {
     }
 
     public void sendCommand(String command) {
-        connectionMetadata.getConnection().sendMessage(new CommandMessage(connectionMetadata.getIdentificator(), command));
+        connectionMetadata.getConnection().communication().sendMessage(new CommandMessage(connectionMetadata.getIdentificator(), command));
         Supervisor.getLogger().info("[EXECUTION] Executing command '" + command + "' on server " + connectionMetadata.getIdentificator());
     }
 

@@ -1,4 +1,4 @@
-package me.litefine.supervisor.network.files;
+package me.litefine.supervisor.network.connection.communication;
 
 import me.litefine.supervisor.network.messages.files.FileSendingMessage;
 
@@ -7,36 +7,36 @@ import java.nio.ByteBuffer;
 
 public class FileReceiver {
 
-    private volatile FileReceiving fileReceiving = null;
+    private volatile FileReceiving currentFileReceiving = null;
 
     public FileReceiving getReceiving() {
-        return fileReceiving;
+        return currentFileReceiving;
     }
 
     public void receiveDataChunk(ByteBuffer byteBuffer) throws IOException {
-        fileReceiving.fileChannel.write(byteBuffer);
+        currentFileReceiving.fileChannel.write(byteBuffer);
     }
 
     public long receivedBytes() throws IOException {
-        return fileReceiving.fileChannel.size();
+        return currentFileReceiving.fileChannel.size();
     }
 
     public void stopReceivingMode() {
         try {
-            fileReceiving.fileChannel.close();
+            currentFileReceiving.fileChannel.close();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            fileReceiving = null;
+            currentFileReceiving = null;
         }
     }
 
     public boolean isReceivingMode() {
-        return fileReceiving != null;
+        return currentFileReceiving != null;
     }
 
     public void createNewReceiving(FileSendingMessage message) throws Exception {
-        fileReceiving = new FileReceiving(message);
+        currentFileReceiving = new FileReceiving(message);
     }
 
 }

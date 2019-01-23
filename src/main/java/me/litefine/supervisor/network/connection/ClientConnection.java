@@ -5,9 +5,9 @@ import io.netty.channel.ChannelHandlerContext;
 import me.litefine.supervisor.main.Settings;
 import me.litefine.supervisor.main.Supervisor;
 import me.litefine.supervisor.network.NettyServer;
+import me.litefine.supervisor.network.connection.communication.CommunicationHandle;
 import me.litefine.supervisor.network.connection.metadata.ConnectionMetadata;
 import me.litefine.supervisor.network.connection.metadata.representers.MinecraftServerRepresenter;
-import me.litefine.supervisor.network.files.FileReceiver;
 import me.litefine.supervisor.network.handlers.LogicHandler;
 import me.litefine.supervisor.network.messages.AbstractMessage;
 import me.litefine.supervisor.network.messages.files.FileSendingMessage;
@@ -41,7 +41,8 @@ public class ClientConnection {
 
     private final Channel channel;
     private final InetSocketAddress address;
-    private final FileReceiver fileReceiver = new FileReceiver();
+    private final CommunicationHandle communicationHandle;
+
     private ConnectionMetadata metadata = null;
     private String disconnectReason = "REASON NOT DEFINED";
     private final ExecutorService extendExecutorService = Executors.newCachedThreadPool();
@@ -55,6 +56,7 @@ public class ClientConnection {
                 throw new IllegalAccessException(address.getAddress().getHostAddress() + " - IP not allowed");
             }
         }
+        communicationHandle = new CommunicationHandle(this);
         NettyServer.getConnections().put(channel, this);
         extendExecutorService.execute(() -> {
             try {
@@ -74,24 +76,24 @@ public class ClientConnection {
             HashMap<String, String> serversDataMap = new HashMap<>();
             NettyServer.getConnections(md -> md != metadata && !md.isAPIHandler() && (md.getConnectionType() == metadata.getConnectionType() || metadata.isAPIHandler()))
                     .forEach(cc -> serversDataMap.put(cc.getMetadata().getIdentificator(), cc.getMetadata().getServerRepresenter().getFormattedData()));
-            sendMessage(new CustomPayloadMessage("ServersInfos", serversDataMap));
+            communicationHandle.sendMessage(new CustomPayloadMessage("ServersInfos", serversDataMap));
         }
-        else if (message instanceof CustomPayloadMessage) NettyServer.getConnections(md -> md != metadata).forEach(cc -> cc.sendMessage(message));
+        else if (message instanceof CustomPayloadMessage) NettyServer.getConnections(md -> md != metadata).forEach(cc -> cc.communication().sendMessage(message));
         else if (message instanceof FileSendingMessage) {
             FileSendingMessage sendingMessage = (FileSendingMessage) message;
             LogicHandler.CURRENT_FILES_RECEIVINGS.add(sendingMessage.getPath());
-            fileReceiver.createNewReceiving(sendingMessage);
+            communicationHandle.fileReceiver().createNewReceiving(sendingMessage);
         }
         else if (message instanceof FilesRequestMessage) {
             String path = ((FilesRequestMessage) message).getPath();
             File target = Paths.get(Settings.getDataFolder().getAbsolutePath() + "/" + path).toFile();
-            if (LogicHandler.CURRENT_FILES_RECEIVINGS.contains(path)) sendMessage(new FilesResponseMessage(path, -1));
+            if (LogicHandler.CURRENT_FILES_RECEIVINGS.contains(path)) communicationHandle.sendMessage(new FilesResponseMessage(path, -1));
             else if (target.exists()) {
                 if (target.isFile()) {
-                    sendMessage(new FilesResponseMessage(path, 1));
+                    communicationHandle.sendMessage(new FilesResponseMessage(path, 1));
                     channel.writeAndFlush(target);
                 } else {
-                    sendMessage(new FilesResponseMessage(path, target.listFiles().length));
+                    communicationHandle.sendMessage(new FilesResponseMessage(path, target.listFiles().length));
                     for (File file : target.listFiles()) channel.writeAndFlush(file);
                 }
             } else channel.writeAndFlush(new FilesResponseMessage(path, 0));
@@ -106,24 +108,24 @@ public class ClientConnection {
                 if (metadata.isMinecraftServer()) ((MinecraftServerRepresenter) metadata.getServerRepresenter()).setTps(Float.parseFloat(dataSplit[3]));
                 ServerInfoEventMessage abstractMessage = firstFill ? new ServerInfoEventMessage(ServerInfoEventMessage.ServerEvent.ADD_SERVER, metadata.getIdentificator(), updateMessage.getFormattedInfoData()) :
                         new ServerInfoEventMessage(ServerInfoEventMessage.ServerEvent.STATUS_UPDATE, metadata.getIdentificator(), updateMessage.getFormattedInfoData());
-                NettyServer.getConnections(md -> ((metadata != md && metadata.getConnectionType() == md.getConnectionType()) || md.isAPIHandler()) && md.isSubscribedTo(metadata)).forEach(cc -> cc.sendMessage(abstractMessage));
+                NettyServer.getConnections(md -> ((metadata != md && metadata.getConnectionType() == md.getConnectionType()) || md.isAPIHandler()) && md.isSubscribedTo(metadata)).forEach(cc -> cc.communication().sendMessage(abstractMessage));
             }
         } else if (message instanceof PlayerInfoRequestMessage) {
             String requestedPlayer = ((PlayerInfoRequestMessage) message).getPlayerName();
             PlayerInfoResponseMessage nullMessage = new PlayerInfoResponseMessage(requestedPlayer, "NULL");
-            if (NettyServer.getBungeeServers().isEmpty()) sendMessage(nullMessage);
+            if (NettyServer.getBungeeServers().isEmpty()) communicationHandle.sendMessage(nullMessage);
             else {
                 extendExecutorService.submit(() -> {
                     for (ClientConnection clientConnection : NettyServer.getConnections(ConnectionMetadata::isBungeeServer)) {
                         if (!clientConnection.getChannel().isActive()) continue;
-                        clientConnection.sendMessage(message);
-                        PlayerInfoResponseMessage responseMessage = clientConnection.getChannel().pipeline().get(LogicHandler.class).waitForObject(PlayerInfoResponseMessage.class, response -> response.getPlayerName().equals(requestedPlayer), 100L).orElse(null);
+                        clientConnection.communicationHandle.sendMessage(message);
+                        PlayerInfoResponseMessage responseMessage = clientConnection.communication().waitForObject(PlayerInfoResponseMessage.class, response -> response.getPlayerName().equals(requestedPlayer), 100L).orElse(null);
                         if (responseMessage != null && responseMessage.isFound()) {
-                            if (channel.isActive()) sendMessage(responseMessage);
+                            if (channel.isActive()) communicationHandle.sendMessage(responseMessage);
                             return;
                         }
                     }
-                    if (channel.isActive()) sendMessage(nullMessage);
+                    if (channel.isActive()) communicationHandle.sendMessage(nullMessage);
                 });
             }
         } else if (message instanceof CommandMessage) {
@@ -140,19 +142,19 @@ public class ClientConnection {
                         NettyServer.getBungeeServers().forEach(server -> server.sendCommand(commandMessage.getCommand()));
                         break;
                     case ALL_API_HANDLERS:
-                        NettyServer.getConnections(ConnectionMetadata::isAPIHandler).forEach(cc -> sendMessage(message));
+                        NettyServer.getConnections(ConnectionMetadata::isAPIHandler).forEach(cc -> cc.communication().sendMessage(message));
                         break;
                 }
             } catch (IllegalArgumentException ex) {
-                NettyServer.getConnection(target, true).ifPresent(connection -> connection.sendMessage(message));
+                NettyServer.getConnection(target, true).ifPresent(connection -> connection.communication().sendMessage(message));
             }
         } else if (message instanceof PlayerChatMessage || message instanceof PlayerTitleMessage) {
-            if (!metadata.isAPIHandler()) NettyServer.getConnections(md -> md.getConnectionType() == metadata.getConnectionType() && md != metadata).forEach(cc -> cc.sendMessage(message));
-            else NettyServer.getConnections(ConnectionMetadata::isBungeeServer).forEach(cc -> cc.sendMessage(message));
+            if (!metadata.isAPIHandler()) NettyServer.getConnections(md -> md.getConnectionType() == metadata.getConnectionType() && md != metadata).forEach(cc -> cc.communication().sendMessage(message));
+            else NettyServer.getConnections(ConnectionMetadata::isBungeeServer).forEach(cc -> cc.communication().sendMessage(message));
         } else if (message instanceof PlayerSkinRequestMessage) {
             PlayerSkinRequestMessage requestMessage = (PlayerSkinRequestMessage) message;
             CashedProfile cashedProfile = MojangAPI.fetchProfile(requestMessage.getPlayerName(), requestMessage.getDefaultUUID());
-            sendMessage(new PlayerSkinResponseMessage(requestMessage.getPlayerName(), cashedProfile));
+            communicationHandle.sendMessage(new PlayerSkinResponseMessage(requestMessage.getPlayerName(), cashedProfile));
         } else if (message instanceof DisconnectMessage) {
             DisconnectMessage disconnectMessage = (DisconnectMessage) message;
             disconnectReason = disconnectMessage.getReason();
@@ -160,17 +162,13 @@ public class ClientConnection {
         }
     }
 
-    public void sendMessage(AbstractMessage message) {
-        channel.writeAndFlush(message);
-    }
-
-    public FileReceiver getFileReceiver() {
-        return fileReceiver;
+    public CommunicationHandle communication() {
+        return communicationHandle;
     }
 
     public void close(String reason) {
         disconnectReason = reason;
-        sendMessage(new DisconnectMessage(reason));
+        communicationHandle.sendMessage(new DisconnectMessage(reason));
         channel.close().syncUninterruptibly();
     }
 

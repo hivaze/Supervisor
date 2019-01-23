@@ -8,8 +8,8 @@ import io.netty.util.ReferenceCountUtil;
 import me.litefine.supervisor.main.Supervisor;
 import me.litefine.supervisor.network.NettyServer;
 import me.litefine.supervisor.network.connection.ClientConnection;
-import me.litefine.supervisor.network.files.FileReceiver;
-import me.litefine.supervisor.network.files.FileReceiving;
+import me.litefine.supervisor.network.connection.communication.FileReceiver;
+import me.litefine.supervisor.network.connection.communication.FileReceiving;
 
 @ChannelHandler.Sharable
 public class ChunkedFileDecoder extends SimpleChannelInboundHandler<ByteBuf> {
@@ -18,9 +18,9 @@ public class ChunkedFileDecoder extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf byteBuf) throws Exception {
-        ClientConnection clientConnection = NettyServer.getConnection(ctx.channel()).orElse(null);
-        if (clientConnection != null) {
-            FileReceiver fileReceiver = clientConnection.getFileReceiver();
+        ClientConnection connection = NettyServer.getConnection(ctx.channel()).orElse(null);
+        if (connection != null) {
+            FileReceiver fileReceiver = connection.communication().fileReceiver();
             ReferenceCountUtil.retain(byteBuf);
             if (fileReceiver.isReceivingMode()) {
                 FileReceiving fileReceiving = fileReceiver.getReceiving();
