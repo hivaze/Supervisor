@@ -41,7 +41,7 @@ public class FramedMessageDecoder extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        Supervisor.getLogger().warn("[FramedMessageDecoder] Can't read ByteBuf from " + ctx.channel().remoteAddress());
+        Supervisor.getLogger().warn("[NETWORK] (FramedMessageDecoder) Can't read ByteBuf from " + ctx.channel().remoteAddress());
         cause.printStackTrace();
     }
 
@@ -58,7 +58,7 @@ public class FramedMessageDecoder extends SimpleChannelInboundHandler<ByteBuf> {
                         if (byteBuf.readerIndex() < byteBuf.writerIndex()) ctx.pipeline().fireChannelRead(byteBuf.retain());
                     } else throw new ReflectiveOperationException(clazz.getName());
                 } catch (ReflectiveOperationException ex) {
-                    Supervisor.getLogger().warn("Unknown message type '" + messageName + "' received from " + ctx.channel().remoteAddress());
+                    Supervisor.getLogger().warn("[NETWORK] Unknown message type '" + messageName + "' received from " + ctx.channel().remoteAddress());
                 }
             }
         });

@@ -33,7 +33,7 @@ public class CommandsManager {
             if (commands.containsKey(command)) {
                 long time = System.currentTimeMillis();
                 commands.get(command).execute(args);
-                Supervisor.getLogger().debug("Command '" + command + "' executed in " + (System.currentTimeMillis() - time) + " ms");
+                Supervisor.getLogger().debug("[EXECUTION] Command '" + command + "' executed in " + (System.currentTimeMillis() - time) + " ms");
             }
             else Supervisor.getLogger().warn("Неизвестная команда.");
         } else Supervisor.getLogger().warn("Ввведена пустая команда!");

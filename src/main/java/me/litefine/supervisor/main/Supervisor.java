@@ -2,6 +2,7 @@ package me.litefine.supervisor.main;
 
 import me.litefine.supervisor.console.ConsoleManager;
 import me.litefine.supervisor.network.NettyServer;
+import me.litefine.supervisor.utils.mojang.MojangAPI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,6 +28,7 @@ public class Supervisor {
         try {
             Settings.setupFiles();
             Settings.loadFromConfig();
+            MojangAPI.loadProxyList();
             ConsoleManager.setup();
             NettyServer.start();
         } catch (Exception ex) {
@@ -41,7 +43,7 @@ public class Supervisor {
         logger.info("Shutdown...");
         long time = System.currentTimeMillis();
         NettyServer.stop();
-        logger.info("Supervisor finnished in " + (System.currentTimeMillis() - time) + " ms. See you later.");
+        logger.info("Supervisor finished in " + (System.currentTimeMillis() - time) + " ms. See you later.");
     }
 
     public static Logger getLogger() {

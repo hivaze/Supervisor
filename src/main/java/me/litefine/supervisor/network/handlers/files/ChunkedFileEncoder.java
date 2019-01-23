@@ -20,7 +20,7 @@ public class ChunkedFileEncoder extends ChannelOutboundHandlerAdapter {
         if (msg instanceof File) {
             File file = (File) msg;
             if (file.exists() && file.isFile()) {
-                Supervisor.getLogger().debug("Sending file: " + file.getAbsolutePath() +  " to socket " + ctx.channel().unsafe().remoteAddress());
+                Supervisor.getLogger().debug("[NETWORK] Sending file: " + file.getAbsolutePath() +  " to socket " + ctx.channel().unsafe().remoteAddress());
                 super.write(ctx, new FileSendingMessage(file), promise);
                 super.write(ctx, new ChunkedFile(file), promise);
             } else throw new IllegalArgumentException("Invalid file " + file);

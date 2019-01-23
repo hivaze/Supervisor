@@ -5,6 +5,7 @@ Settings:
   supervisorHost: localhost:7000
   nettyThreadsCount: 0 # При установке значения 0, количество потоков будет определяться автоатически
   enableDebug: true
+  useMojangBypass: false # Использовать прокси из http-proxy-list.txt для соединения с Mojang API
 
 # Разрешенные IP-адреса для устновки соединения
 Security:

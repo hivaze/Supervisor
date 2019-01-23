@@ -43,7 +43,7 @@ public abstract class ServerRepresenter {
 
     public void sendCommand(String command) {
         connectionMetadata.getConnection().sendMessage(new CommandMessage(connectionMetadata.getIdentificator(), command));
-        Supervisor.getLogger().info("Executing command '" + command + "' on server " + connectionMetadata.getIdentificator());
+        Supervisor.getLogger().info("[EXECUTION] Executing command '" + command + "' on server " + connectionMetadata.getIdentificator());
     }
 
     public boolean isFilled() {

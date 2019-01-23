@@ -2,14 +2,12 @@ package me.litefine.supervisor.network.connection;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.internal.ConcurrentSet;
 import me.litefine.supervisor.main.Settings;
 import me.litefine.supervisor.main.Supervisor;
 import me.litefine.supervisor.network.NettyServer;
 import me.litefine.supervisor.network.connection.metadata.ConnectionMetadata;
 import me.litefine.supervisor.network.connection.metadata.representers.MinecraftServerRepresenter;
 import me.litefine.supervisor.network.files.FileReceiver;
-import me.litefine.supervisor.network.files.FileReceiving;
 import me.litefine.supervisor.network.handlers.LogicHandler;
 import me.litefine.supervisor.network.messages.AbstractMessage;
 import me.litefine.supervisor.network.messages.files.FileSendingMessage;
@@ -32,20 +30,14 @@ import me.litefine.supervisor.utils.mojang.CashedProfile;
 import me.litefine.supervisor.utils.mojang.MojangAPI;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class ClientConnection {
-
-    private static final Set<String> currentFileReceivings = new ConcurrentSet<>();
 
     private final Channel channel;
     private final InetSocketAddress address;
@@ -68,7 +60,7 @@ public class ClientConnection {
             try {
                 TimeUnit.SECONDS.sleep(5);
                 if (NettyServer.getConnection(channel).isPresent() && metadata == null) {
-                    NettyServer.getConnections().remove(this);
+                    NettyServer.getConnections().remove(channel);
                     close("IDENTIFICATION NOT PASSED IN 5 SECONDS");
                     Supervisor.getLogger().debug("Connection " + address + " dropped: Identification timeout");
                 }
@@ -76,15 +68,7 @@ public class ClientConnection {
         });
     }
 
-    public void handleFileReceiving(FileReceiving fileReceiving) throws IOException {
-        File target = new File(Settings.getDataFolder(), fileReceiving.getPath());
-        target.getParentFile().mkdirs();
-        Files.move(fileReceiving.getFile().toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        currentFileReceivings.remove(fileReceiving.getPath());
-        Supervisor.getLogger().debug("File received: (" + target.getAbsolutePath() + ", size: " + fileReceiving.getMaxFileLength() + ", time: " + (System.currentTimeMillis() - fileReceiving.getStartTimestamp()) + " ms) from socket " + address);
-    }
-
-    public void handleMessageReceiving(AbstractMessage message) throws Exception {
+    public void handleMessage(AbstractMessage message) throws Exception {
         if (message instanceof IdentificationMessage) {
             metadata = new ConnectionMetadata(this, (IdentificationMessage) message);
             HashMap<String, String> serversDataMap = new HashMap<>();
@@ -95,13 +79,13 @@ public class ClientConnection {
         else if (message instanceof CustomPayloadMessage) NettyServer.getConnections(md -> md != metadata).forEach(cc -> cc.sendMessage(message));
         else if (message instanceof FileSendingMessage) {
             FileSendingMessage sendingMessage = (FileSendingMessage) message;
-            currentFileReceivings.add(sendingMessage.getPath());
+            LogicHandler.CURRENT_FILES_RECEIVINGS.add(sendingMessage.getPath());
             fileReceiver.createNewReceiving(sendingMessage);
         }
         else if (message instanceof FilesRequestMessage) {
             String path = ((FilesRequestMessage) message).getPath();
             File target = Paths.get(Settings.getDataFolder().getAbsolutePath() + "/" + path).toFile();
-            if (currentFileReceivings.contains(path)) sendMessage(new FilesResponseMessage(path, -1));
+            if (LogicHandler.CURRENT_FILES_RECEIVINGS.contains(path)) sendMessage(new FilesResponseMessage(path, -1));
             else if (target.exists()) {
                 if (target.isFile()) {
                     sendMessage(new FilesResponseMessage(path, 1));

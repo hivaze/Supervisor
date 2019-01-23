@@ -23,7 +23,7 @@ public class ConsoleManager {
                     String command = reader.readLine();
                     CommandsManager.execureCommand(command);
                 } catch (Exception e) {
-                    Supervisor.getLogger().error("An error in console reader - " + e.getMessage());
+                    Supervisor.getLogger().error("[CONSOLE] An error in console reader - " + e.getMessage());
                     break;
                 }
             }

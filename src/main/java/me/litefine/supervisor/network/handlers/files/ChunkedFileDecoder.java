@@ -40,7 +40,7 @@ public class ChunkedFileDecoder extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        Supervisor.getLogger().warn("[ChunkedFileDecoder] Can't read ByteBuf from " + ctx.channel().remoteAddress());
+        Supervisor.getLogger().warn("[NETWORK] (ChunkedFileDecoder) Can't read ByteBuf from " + ctx.channel().remoteAddress());
         cause.printStackTrace();
     }
 
