@@ -23,8 +23,7 @@ public class ConsoleManager {
                     String command = reader.readLine();
                     CommandsManager.execureCommand(command);
                 } catch (Exception e) {
-                    Supervisor.getLogger().error("[CONSOLE] An error in console reader - " + e.getMessage());
-                    break;
+                    Supervisor.getLogger().error("[CONSOLE] An error occurred in console thread!", e);
                 }
             }
         }, "Console Thread");

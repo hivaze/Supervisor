@@ -2,9 +2,7 @@ package me.litefine.supervisor.utils;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,7 +18,12 @@ public class StringUtils {
     }
 
     public static String millisToPattern(long millis) {
-        return DateTimeFormatter.ofPattern("HH:mm:ss").format(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC));
+        Duration dur = Duration.ofMillis(millis);
+        long daysDur = dur.toDays();
+        long hoursDur = dur.minusDays(daysDur).toHours();
+        long minutesDur = dur.minusDays(daysDur).minusHours(hoursDur).toMinutes();
+        long secondsDur = dur.minusDays(daysDur).minusHours(hoursDur).minusMinutes(minutesDur).getSeconds();
+        return String.format("%02d days %02dh %02dm %02ds", daysDur, hoursDur, minutesDur, secondsDur);
     }
 
     public static String removeExtraSpaces(String string) {
