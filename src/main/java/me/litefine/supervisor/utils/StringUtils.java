@@ -23,7 +23,7 @@ public class StringUtils {
         long hoursDur = dur.minusDays(daysDur).toHours();
         long minutesDur = dur.minusDays(daysDur).minusHours(hoursDur).toMinutes();
         long secondsDur = dur.minusDays(daysDur).minusHours(hoursDur).minusMinutes(minutesDur).getSeconds();
-        return String.format("%02d days %02dh %02dm %02ds", daysDur, hoursDur, minutesDur, secondsDur);
+        return String.format("%02dd %02dh %02dm %02ds", daysDur, hoursDur, minutesDur, secondsDur);
     }
 
     public static String removeExtraSpaces(String string) {
