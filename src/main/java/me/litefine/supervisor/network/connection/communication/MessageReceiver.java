@@ -2,9 +2,6 @@ package me.litefine.supervisor.network.connection.communication;
 
 import io.netty.buffer.ByteBuf;
 
-/**
- * Created by LITEFINE IDEA on 2019-01-23.
- */
 public class MessageReceiver {
 
     private ByteBuf cumulation;

@@ -42,11 +42,11 @@ public class MinecraftServerRepresenter extends ServerRepresenter {
     }
 
     public static int getTotalOnline() {
-        return NettyServer.getMinecraftServers().stream().mapToInt(ServerRepresenter::getOnline).sum();
+        return NettyServer.getMinecraftServers().mapToInt(ServerRepresenter::getOnline).sum();
     }
 
     public static int getTotalMaxCount() {
-        return NettyServer.getMinecraftServers().stream().mapToInt(ServerRepresenter::getMaxPlayers).sum();
+        return NettyServer.getMinecraftServers().mapToInt(ServerRepresenter::getMaxPlayers).sum();
     }
 
 }

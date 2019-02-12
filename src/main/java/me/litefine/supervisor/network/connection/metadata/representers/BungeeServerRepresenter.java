@@ -20,11 +20,11 @@ public class BungeeServerRepresenter extends ServerRepresenter {
     }
 
     public static int getTotalOnline() {
-        return NettyServer.getBungeeServers().stream().mapToInt(ServerRepresenter::getOnline).sum();
+        return NettyServer.getBungeeServers().mapToInt(ServerRepresenter::getOnline).sum();
     }
 
     public static int getTotalMaxCount() {
-        return NettyServer.getBungeeServers().stream().mapToInt(ServerRepresenter::getMaxPlayers).sum();
+        return NettyServer.getBungeeServers().mapToInt(ServerRepresenter::getMaxPlayers).sum();
     }
 
 }

@@ -18,8 +18,8 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public class CommandsManager {
 
@@ -45,12 +45,12 @@ public class CommandsManager {
             System.out.println("Supervisor information:");
             System.out.println();
             System.out.println(" Всего соединений: " + NettyServer.getConnections().size());
-            System.out.println(" Идентифицированные: " + NettyServer.getIdentifiedConnections().size());
-            System.out.println(" API соединения: " + NettyServer.getConnections(ConnectionMetadata::isAPIHandler).size());
+            System.out.println(" Идентифицированные: " + NettyServer.getIdentifiedConnections().count());
+            System.out.println(" API соединения: " + NettyServer.getConnections(ConnectionMetadata::isAPIHandler).count());
             System.out.println();
             System.out.println(" Все сервера: " + NettyServer.getServersAsStream().count());
-            System.out.println(" BungeeCord сервера: " + NettyServer.getBungeeServers().size());
-            System.out.println(" Minecraft сервера: " + NettyServer.getMinecraftServers().size());
+            System.out.println(" BungeeCord сервера: " + NettyServer.getBungeeServers().count());
+            System.out.println(" Minecraft сервера: " + NettyServer.getMinecraftServers().count());
             System.out.println();
             System.out.println(" Онлайн BungeeCord серверов: " + BungeeServerRepresenter.getTotalOnline() + "/" + BungeeServerRepresenter.getTotalMaxCount());
             System.out.println(" Онлайн Minecraft серверов: " + MinecraftServerRepresenter.getTotalOnline() + "/" + MinecraftServerRepresenter.getTotalMaxCount());
@@ -62,9 +62,9 @@ public class CommandsManager {
             System.out.println();
         });
         commands.put("connections", args -> {
-            if (NettyServer.getIdentifiedConnections().isEmpty()) System.out.println("Текущих соединений нету!");
+            if (NettyServer.getIdentifiedConnections().count() == 0) System.out.println("Текущих соединений нету!");
             else {
-                List<ClientConnection> targetConnections;
+                Stream<ClientConnection> targetConnections;
                 if (args.length == 0) {
                     System.out.println("Current identified connections:");
                     targetConnections = NettyServer.getIdentifiedConnections();
@@ -99,7 +99,7 @@ public class CommandsManager {
             }
         });
         commands.put("genbungeeservers", args -> {
-            if (!NettyServer.getMinecraftServers().isEmpty()) {
+            if (NettyServer.getMinecraftServers().count() > 0) {
                 File newFile = new File(Settings.getOutFolder(), System.currentTimeMillis() + ".yml");
                 try {
                     HashMap<String, Object> servers = new HashMap<>();

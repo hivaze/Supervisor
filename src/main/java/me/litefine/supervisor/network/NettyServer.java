@@ -18,12 +18,10 @@ import me.litefine.supervisor.network.handlers.messaging.FramedMessageDecoder;
 import me.litefine.supervisor.network.handlers.messaging.MessageEncoder;
 import me.litefine.supervisor.utils.NettyUtils;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class NettyServer {
@@ -76,16 +74,16 @@ public class NettyServer {
         return connections;
     }
 
-    public static List<ClientConnection> getIdentifiedConnections() {
-        return connections.values().stream().filter(ClientConnection::isIdentified).collect(Collectors.toList());
+    public static Stream<ClientConnection> getIdentifiedConnections() {
+        return connections.values().stream().filter(ClientConnection::isIdentified);
     }
 
-    public static List<ClientConnection> getNonIdentifiedCConnections() {
-        return connections.values().stream().filter(cc -> !cc.isIdentified()).collect(Collectors.toList());
+    public static Stream<ClientConnection> getNonIdentifiedCConnections() {
+        return connections.values().stream().filter(cc -> !cc.isIdentified());
     }
 
-    public static List<ClientConnection> getConnections(Predicate<ConnectionMetadata> filter) {
-        return connections.values().stream().filter(cc -> cc.isIdentified() && filter.test(cc.getMetadata())).collect(Collectors.toList());
+    public static Stream<ClientConnection> getConnections(Predicate<ConnectionMetadata> filter) {
+        return connections.values().stream().filter(cc -> cc.isIdentified() && filter.test(cc.getMetadata()));
     }
 
     public static Optional<ClientConnection> getConnection(Channel channel) {
@@ -104,12 +102,12 @@ public class NettyServer {
         return connections.values().stream().filter(cc -> cc.isIdentified() && cc.getMetadata().supportsServerRepresenter()).map(cn -> cn.getMetadata().getServerRepresenter());
     }
 
-    public static List<MinecraftServerRepresenter> getMinecraftServers() {
-        return getServersAsStream().filter(MinecraftServerRepresenter.class::isInstance).map(MinecraftServerRepresenter.class::cast).collect(Collectors.toList());
+    public static Stream<MinecraftServerRepresenter> getMinecraftServers() {
+        return getServersAsStream().filter(MinecraftServerRepresenter.class::isInstance).map(MinecraftServerRepresenter.class::cast);
     }
 
-    public static List<BungeeServerRepresenter> getBungeeServers() {
-        return getServersAsStream().filter(BungeeServerRepresenter.class::isInstance).map(BungeeServerRepresenter.class::cast).collect(Collectors.toList());
+    public static Stream<BungeeServerRepresenter> getBungeeServers() {
+        return getServersAsStream().filter(BungeeServerRepresenter.class::isInstance).map(BungeeServerRepresenter.class::cast);
     }
 
 }

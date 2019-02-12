@@ -8,9 +8,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/**
- * Created by LITEFINE IDEA on 2019-01-23.
- */
 public class CommunicationHandle {
 
     private final ClientConnection connection;

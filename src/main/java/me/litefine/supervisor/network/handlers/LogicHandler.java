@@ -42,7 +42,7 @@ public class LogicHandler extends SimpleChannelInboundHandler<Object> {
             NettyServer.getConnections().remove(connection.getChannel());
             if (connection.isIdentified() && !connection.getMetadata().isAPIHandler()) {
                 ServerInfoEventMessage message = new ServerInfoEventMessage(ServerInfoEventMessage.ServerEvent.REMOVE_SERVER, connection.getMetadata().getIdentificator(), null);
-                NettyServer.getConnections(md -> connection.getMetadata().getConnectionType() == md.getConnectionType() || md.isAPIHandler()).forEach(cc -> cc.communication().sendMessage(message));
+                NettyServer.getConnections(md -> (connection.getMetadata().getConnectionType() == md.getConnectionType() || md.isAPIHandler()) && md.isSubscribedTo(connection.getMetadata())) .forEach(cc -> cc.communication().sendMessage(message));
             }
             Supervisor.getLogger().info("[NETWORK] Connection " + connection.getAddress() + " closed: " + connection.getDisconnectReason());
         }

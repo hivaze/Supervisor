@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ClientConnection {
 
@@ -74,7 +75,7 @@ public class ClientConnection {
         if (message instanceof IdentificationMessage) {
             metadata = new ConnectionMetadata(this, (IdentificationMessage) message);
             HashMap<String, String> serversDataMap = new HashMap<>();
-            NettyServer.getConnections(md -> md != metadata && !md.isAPIHandler() && (md.getConnectionType() == metadata.getConnectionType() || metadata.isAPIHandler()))
+            NettyServer.getConnections(md -> md != metadata && !md.isAPIHandler() && (md.getConnectionType() == metadata.getConnectionType() || metadata.isAPIHandler()) && metadata.isSubscribedTo(md))
                     .forEach(cc -> serversDataMap.put(cc.getMetadata().getIdentificator(), cc.getMetadata().getServerRepresenter().getFormattedData()));
             communicationHandle.sendMessage(new CustomPayloadMessage("ServersInfos", serversDataMap));
         }
@@ -113,10 +114,10 @@ public class ClientConnection {
         } else if (message instanceof PlayerInfoRequestMessage) {
             String requestedPlayer = ((PlayerInfoRequestMessage) message).getPlayerName();
             PlayerInfoResponseMessage nullMessage = new PlayerInfoResponseMessage(requestedPlayer, "NULL");
-            if (NettyServer.getBungeeServers().isEmpty()) communicationHandle.sendMessage(nullMessage);
+            if (NettyServer.getBungeeServers().count() == 0) communicationHandle.sendMessage(nullMessage);
             else {
                 extendExecutorService.submit(() -> {
-                    for (ClientConnection clientConnection : NettyServer.getConnections(ConnectionMetadata::isBungeeServer)) {
+                    for (ClientConnection clientConnection : NettyServer.getConnections(ConnectionMetadata::isBungeeServer).collect(Collectors.toList())) {
                         if (!clientConnection.getChannel().isActive()) continue;
                         clientConnection.communicationHandle.sendMessage(message);
                         PlayerInfoResponseMessage responseMessage = clientConnection.communication().waitForObject(PlayerInfoResponseMessage.class, response -> response.getPlayerName().equals(requestedPlayer), 100L).orElse(null);
