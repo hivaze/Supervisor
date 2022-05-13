@@ -14,7 +14,12 @@ import java.util.Map;
 
 public class Settings {
 
-    private static File mainFolder, configFile, proxyFile, runnedJar, dataFolder, outFolder;
+    private static final File mainFolder;
+    private static final File configFile;
+    private static final File proxyFile;
+    private static final File runnedJar;
+    private static final File dataFolder;
+    private static final File outFolder;
 
     private static InetSocketAddress supervisorHost;
     private static int nettyThreadsCount;
